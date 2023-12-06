@@ -3,7 +3,8 @@ import paho.mqtt.client as paho
 import sys
 import datetime
 
-timer   =   datetime.datetime.now() + datetime.timedelta(seconds=110)
+#timer   =   datetime.datetime.now() + datetime.timedelta(seconds=110)
+
 
 ## Conectando a Broker
 client  =   paho.Client()
@@ -33,7 +34,7 @@ control3.publicador(client, "/llegada", control3.tiempoDeSalida.strftime("%m/%d/
 
 #  Definir el estado de los servicios
 for panel in paneles:
-    if((timer   -   panel.tiempo_atraso).total_seconds()   <=  0   and panel.encendido):
+    if((datetime.datetime.now()   -   panel.tiempo_atraso).total_seconds()   <=  0   and panel.encendido):
         print('green flag')
         panel.publicador(client, "/estado", "A tiempo")
         panel.publicador(client, "/semaforo", "green")
@@ -44,12 +45,12 @@ for panel in paneles:
         panel.publicador(client, "/estado", "Apagado")
         panel.publicador(client, "/semaforo", "black")
 
-    elif((timer   -   panel.tiempo_atraso).total_seconds()   >  180):
+    elif((datetime.datetime.now()   -   panel.tiempo_atraso).total_seconds()   >  180):
         print('red flag')
         panel.publicador(client, "/estado", "Servicio suprimido")
         panel.publicador(client, "/semaforo", "red")
         panel.publicador(client, "/llegada", control2.tiempoDeSalida.strftime("%m/%d/%Y, %H:%M:%S"))
-        tiempo_delta = (timer   -   panel.tiempoDeSalida).total_seconds()
+        tiempo_delta = (datetime.datetime.now()   -   panel.tiempoDeSalida).total_seconds()
         for paneles_encendidos in paneles:
             if(paneles_encendidos.encendido and paneles_encendidos.topic  !=  panel.topic):
                 paneles_encendidos.tiempo_atraso   -= datetime.timedelta(seconds=tiempo_delta)
@@ -59,7 +60,7 @@ for panel in paneles:
         panel.publicador(client, "/estado", "Servicio atrasado")
         panel.publicador(client, "/semaforo", "yellow")
         panel.publicador(client, "/llegada", control2.tiempoDeSalida.strftime("%m/%d/%Y, %H:%M:%S"))
-        tiempo_delta = (timer   -   panel.tiempoDeSalida).total_seconds()
+        tiempo_delta = (datetime.datetime.now()   -   panel.tiempoDeSalida).total_seconds()
         for paneles_encendidos in paneles:
             if(paneles_encendidos.encendido and paneles_encendidos.topic  !=  panel.topic):
                 paneles_encendidos.tiempo_atraso   -= datetime.timedelta(seconds=tiempo_delta)
