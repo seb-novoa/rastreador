@@ -3,7 +3,11 @@ import paho.mqtt.client as paho
 import sys
 import datetime
 
-#timer   =   datetime.datetime.now() + datetime.timedelta(seconds=110)
+# #   Desfase del tiempo.
+# def timer(off):
+#     offTimer    =   datetime.timedelta(seconds=off)
+# offTimer    =   0
+
 
 
 ## Conectando a Broker
@@ -26,9 +30,9 @@ paneles.append(control3)
 
 
 ## Se envia al HMI los tiempos calculados
-control1.publicador(client, "/llegada", control1.tiempoDeSalida.strftime("%m/%d/%Y, %H:%M:%S"))
-control2.publicador(client, "/llegada", control2.tiempoDeSalida.strftime("%m/%d/%Y, %H:%M:%S"))
-control3.publicador(client, "/llegada", control3.tiempoDeSalida.strftime("%m/%d/%Y, %H:%M:%S"))
+control1.publicador(client, "/salida", control1.tiempoDeSalida.strftime("%m/%d/%Y, %H:%M:%S"))
+control2.publicador(client, "/salida", control2.tiempoDeSalida.strftime("%m/%d/%Y, %H:%M:%S"))
+control3.publicador(client, "/salida", control3.tiempoDeSalida.strftime("%m/%d/%Y, %H:%M:%S"))
 
 #control1.arribo = True
 
@@ -38,6 +42,7 @@ for panel in paneles:
         print('green flag')
         panel.publicador(client, "/estado", "A tiempo")
         panel.publicador(client, "/semaforo", "green")
+        panel.publicador(client, "/llegada", panel.tiempoDeSalida.strftime("%m/%d/%Y, %H:%M:%S"))
 
     elif(panel.arribo):
         print('black flag')
@@ -49,7 +54,7 @@ for panel in paneles:
         print('red flag')
         panel.publicador(client, "/estado", "Servicio suprimido")
         panel.publicador(client, "/semaforo", "red")
-        panel.publicador(client, "/llegada", control2.tiempoDeSalida.strftime("%m/%d/%Y, %H:%M:%S"))
+        panel.publicador(client, "/llegada", panel.tiempoDeSalida.strftime("%m/%d/%Y, %H:%M:%S"))
         tiempo_delta = (datetime.datetime.now()   -   panel.tiempoDeSalida).total_seconds()
         for paneles_encendidos in paneles:
             if(paneles_encendidos.encendido and paneles_encendidos.topic  !=  panel.topic):
@@ -59,7 +64,7 @@ for panel in paneles:
         print('yellow flag')
         panel.publicador(client, "/estado", "Servicio atrasado")
         panel.publicador(client, "/semaforo", "yellow")
-        panel.publicador(client, "/llegada", control2.tiempoDeSalida.strftime("%m/%d/%Y, %H:%M:%S"))
+        panel.publicador(client, "/llegada", panel.tiempoDeSalida.strftime("%m/%d/%Y, %H:%M:%S"))
         tiempo_delta = (datetime.datetime.now()   -   panel.tiempoDeSalida).total_seconds()
         for paneles_encendidos in paneles:
             if(paneles_encendidos.encendido and paneles_encendidos.topic  !=  panel.topic):
