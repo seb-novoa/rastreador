@@ -8,13 +8,14 @@ import datetime
 #     offTimer    =   datetime.timedelta(seconds=off)
 # offTimer    =   0
 
-
-
 ## Conectando a Broker
 client  =   paho.Client()
 if(client.connect("broker.hivemq.com", 1883, 60)    !=  0):
     print("No hay conexion con el broker")
     sys.exit(-1)
+
+client.publish("rastreador1/estatus", "OFFLINE", 0)
+client.publish("rastreador2/estatus", "ONLINE", 0)
 
 ## Se definen los tiempo de salida 
 ### A la hora actual se le suman un tiempo para representar una salida de la estacion.
