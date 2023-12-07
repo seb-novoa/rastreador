@@ -67,6 +67,7 @@ def runTimer():
                     paneles_encendidos.publicador(client, "/estado", "Servicio suprimido")
                     paneles_encendidos.publicador(client, "/semaforo", "red")
                     paneles_encendidos.publicador(client, "/llegada", "-")
+            client.publish("topic/estado", "Termino de recorrido", 0)
             break
             # if((i + 1) < len(paneles)):
             #     paneles[i + 1].tiempo_atraso_cal   -=  datetime.timedelta(seconds=tiempo_delta)
@@ -94,6 +95,7 @@ def runTimer():
 
 
 inicio = time.time()
+client.publish("topic/estado", "Recorrido", 0)
 while True:
     runTimer()
     tiempo_actual = time.time()
@@ -101,6 +103,7 @@ while True:
     if duracion >= 64:
         break
     time.sleep(2)
+client.publish("topic/estado", "Termino de recorrido", 0)
 
 
 
