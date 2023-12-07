@@ -10,11 +10,11 @@ class Panel:
         self.arribo      =   False
         self.detenido    =   False
         self.tiempo_atraso = tiempoDeSalida
+        self.tiempo_atraso_cal = tiempoDeSalida
 
     def tiempo_de_llegada(cronometro):
         pass
 
     def publicador(self, mqttPublish, topic, msg):
-        print(self.topic + topic)
         mqttPublish.publish(self.topic + topic, msg, 0)
 
