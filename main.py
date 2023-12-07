@@ -2,6 +2,7 @@ from Paneles import Panel
 import paho.mqtt.client as paho
 import sys
 import datetime
+import time
 
 # #   Desfase del tiempo.
 # def timer(off):
@@ -38,40 +39,46 @@ control3.publicador(client, "/salida", control3.tiempoDeSalida.strftime("%m/%d/%
 #control1.arribo = True
 
 #  Definir el estado de los servicios
-for panel in paneles:
-    if((datetime.datetime.now()   -   panel.tiempo_atraso).total_seconds()   <=  0   and panel.encendido):
-        print('green flag')
-        panel.publicador(client, "/estado", "A tiempo")
-        panel.publicador(client, "/semaforo", "green")
-        panel.publicador(client, "/llegada", panel.tiempoDeSalida.strftime("%m/%d/%Y, %H:%M:%S"))
+def runTimer():
+    for panel in paneles:
+        if((datetime.datetime.now()   -   panel.tiempo_atraso).total_seconds()   <=  0   and panel.encendido):
+            print('green flag')
+            panel.publicador(client, "/estado", "A tiempo")
+            panel.publicador(client, "/semaforo", "green")
+            panel.publicador(client, "/llegada", panel.tiempoDeSalida.strftime("%m/%d/%Y, %H:%M:%S"))
 
-    elif(panel.arribo):
-        print('black flag')
-        panel.encendido = False
-        panel.publicador(client, "/estado", "Apagado")
-        panel.publicador(client, "/semaforo", "black")
+        elif(panel.arribo):
+            print('black flag')
+            panel.encendido = False
+            panel.publicador(client, "/estado", "Apagado")
+            panel.publicador(client, "/semaforo", "black")
 
-    elif((datetime.datetime.now()   -   panel.tiempo_atraso).total_seconds()   >  180):
-        print('red flag')
-        panel.publicador(client, "/estado", "Servicio suprimido")
-        panel.publicador(client, "/semaforo", "red")
-        panel.publicador(client, "/llegada", panel.tiempoDeSalida.strftime("%m/%d/%Y, %H:%M:%S"))
-        tiempo_delta = (datetime.datetime.now()   -   panel.tiempoDeSalida).total_seconds()
-        for paneles_encendidos in paneles:
-            if(paneles_encendidos.encendido and paneles_encendidos.topic  !=  panel.topic):
-                paneles_encendidos.tiempo_atraso   -= datetime.timedelta(seconds=tiempo_delta)
-        
-    else:
-        print('yellow flag')
-        panel.publicador(client, "/estado", "Servicio atrasado")
-        panel.publicador(client, "/semaforo", "yellow")
-        panel.publicador(client, "/llegada", panel.tiempoDeSalida.strftime("%m/%d/%Y, %H:%M:%S"))
-        tiempo_delta = (datetime.datetime.now()   -   panel.tiempoDeSalida).total_seconds()
-        for paneles_encendidos in paneles:
-            if(paneles_encendidos.encendido and paneles_encendidos.topic  !=  panel.topic):
-                paneles_encendidos.tiempo_atraso   -= datetime.timedelta(seconds=tiempo_delta)
+        elif((datetime.datetime.now()   -   panel.tiempo_atraso).total_seconds()   >  180):
+            print('red flag')
+            panel.publicador(client, "/estado", "Servicio suprimido")
+            panel.publicador(client, "/semaforo", "red")
+            panel.publicador(client, "/llegada", panel.tiempoDeSalida.strftime("%m/%d/%Y, %H:%M:%S"))
+            tiempo_delta = (datetime.datetime.now()   -   panel.tiempoDeSalida).total_seconds()
+            for paneles_encendidos in paneles:
+                if(paneles_encendidos.encendido and paneles_encendidos.topic  !=  panel.topic):
+                    paneles_encendidos.tiempo_atraso   -= datetime.timedelta(seconds=tiempo_delta)
+            
+        else:
+            panel.publicador(client, "/estado", "Servicio atrasado")
+            panel.publicador(client, "/semaforo", "yellow")
+            panel.publicador(client, "/llegada", panel.tiempoDeSalida.strftime("%m/%d/%Y, %H:%M:%S"))
+            tiempo_delta = (datetime.datetime.now()   -   panel.tiempoDeSalida).total_seconds()
+            for paneles_encendidos in paneles:
+                if(paneles_encendidos.encendido and paneles_encendidos.topic  !=  panel.topic):
+                    paneles_encendidos.tiempo_atraso   -= datetime.timedelta(seconds=tiempo_delta)
 
 
-#while((datetime.datetime.now()   -   control2.tiempoDeSalida).total_seconds()   <=  0):
- #   print((datetime.datetime.now()   -   control1.tiempoDeSalida).total_seconds() < 0)
-
+inicio = time.time()
+while True:
+    runTimer()
+    tiempo_actual = time.time()
+    duracion = tiempo_actual - inicio
+    if duracion >= 180:
+        break
+    time.sleep(5)
+print('Final')
