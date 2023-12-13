@@ -12,10 +12,14 @@ import time
 
 ## Se definen los tiempo de salida 
 ### A la hora actual se le suman un tiempo para representar una salida de la estacion.
-control1    =   Panel("control1",  datetime.datetime.now() + datetime.timedelta(seconds=10),   True)
-control2    =   Panel("control2",  datetime.datetime.now() + datetime.timedelta(seconds=50),  True)
-control3    =   Panel("control3",  datetime.datetime.now() + datetime.timedelta(seconds=60),  True)
+timeCheck    =   datetime.datetime.now()
+control1    =   Panel("control1",  timeCheck + datetime.timedelta(seconds=10),   True)
+control2    =   Panel("control2",  timeCheck + datetime.timedelta(seconds=30),  True)
+control3    =   Panel("control3",  timeCheck + datetime.timedelta(seconds=60),  True)
 
+control1.arribo = True
+control2.arribo = True
+control3.arribo = True
 
 ### Crear lista de objetos
 paneles = []
@@ -41,6 +45,7 @@ control1.publicador(client, "/salida", control1.tiempoDeSalida.strftime("%m/%d/%
 control2.publicador(client, "/salida", control2.tiempoDeSalida.strftime("%m/%d/%Y, %H:%M:%S"))
 control3.publicador(client, "/salida", control3.tiempoDeSalida.strftime("%m/%d/%Y, %H:%M:%S"))
 
+atrasar_ctl2    =   control2.tiempoDeSalida + datetime.timedelta(seconds=10)
 #  Definir el estado de los servicios
 def runTimer():
     for i in range(len(paneles)):
@@ -50,14 +55,15 @@ def runTimer():
             paneles[i].publicador(client, "/semaforo", "green")
             paneles[i].publicador(client, "/llegada", paneles[i].tiempoDeSalida.strftime("%m/%d/%Y, %H:%M:%S"))
 
-        elif(paneles[i].arribo):
-            print('black flag')
-            paneles[i].encendido = False
-            paneles[i].publicador(client, "/estado", "Apagado")
-            paneles[i].publicador(client, "/semaforo", "black")
+        elif(paneles[i].topic != "control2" or datetime.datetime.now() >= atrasar_ctl2):
+            if(paneles[i].topic == "control2"): 
+                print(datetime.datetime.now() >= atrasar_ctl2)
+            if(paneles[i].arribo):
+                paneles[i].encendido = False
+                paneles[i].publicador(client, "/estado", "Apagado")
+                paneles[i].publicador(client, "/semaforo", "black")
 
         elif((datetime.datetime.now()   -   paneles[i].tiempo_atraso_cal).total_seconds()   >  30):
-            print('red flag')
             paneles[i].publicador(client, "/estado", "Servicio suprimido")
             paneles[i].publicador(client, "/semaforo", "red")
             
@@ -69,29 +75,21 @@ def runTimer():
                     paneles_encendidos.publicador(client, "/llegada", "-")
             client.publish("topic/estado", "Termino de recorrido", 0)
             break
-            # if((i + 1) < len(paneles)):
-            #     paneles[i + 1].tiempo_atraso_cal   -=  datetime.timedelta(seconds=tiempo_delta)
-            #     paneles[i + 1].tiempo_atraso    +=  datetime.timedelta(seconds=tiempo_delta)
-            # paneles[i].publicador(client, "/llegada", "-")
-            # for paneles_encendidos in paneles:
-            #     if(paneles_encendidos.encendido and paneles_encendidos.topic  !=  panel.topic):
-            #         paneles_encendidos.tiempo_atraso   -= datetime.timedelta(seconds=tiempo_delta)
             
         else:
             paneles[i].publicador(client, "/estado", "Servicio atrasado")
             paneles[i].publicador(client, "/semaforo", "yellow")
             
             tiempo_delta = (datetime.datetime.now()   -   paneles[i].tiempoDeSalida).total_seconds()
-
+            paneles[i].tiempo_atraso_cal   -=  datetime.timedelta(seconds=tiempo_delta)
+            paneles[i].tiempo_atraso    +=  datetime.timedelta(seconds=tiempo_delta)
+            
             if((i + 1) < len(paneles)):
                 paneles[i + 1].tiempo_atraso_cal   -=  datetime.timedelta(seconds=tiempo_delta)
                 paneles[i + 1].tiempo_atraso    +=  datetime.timedelta(seconds=tiempo_delta)
-                paneles[i + 1].publicador(client, "/llegada", paneles[i + 1].tiempo_atraso.strftime("%m/%d/%Y, %H:%M:%S"))
+                paneles[i + 1].publicador(client, "/llegada", paneles[i + 1].tiempo_atraso_cal.strftime("%m/%d/%Y, %H:%M:%S"))
+                print(paneles[i + 1].topic)
             paneles[i].publicador(client, "/llegada", paneles[i].tiempo_atraso.strftime("%m/%d/%Y, %H:%M:%S"))
-            # for paneles_encendidos in paneles:
-            #     if(paneles_encendidos.encendido and paneles_encendidos.topic  !=  panel.topic):
-            #         paneles_encendidos.tiempo_atraso   -= datetime.timedelta(seconds=tiempo_delta)
-
 
 
 inicio = time.time()
@@ -103,6 +101,7 @@ while True:
     if duracion >= 64:
         break
     time.sleep(2)
+
 client.publish("topic/estado", "Termino de recorrido", 0)
 
 
