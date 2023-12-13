@@ -8,7 +8,7 @@ class Panel:
         self.estado =   estado
         self.encendido   =   True
         self.arribo      =   False
-        self.detenido    =   False
+        self.atrasado    =   False
         self.tiempo_atraso = tiempoDeSalida
         self.tiempo_atraso_cal = tiempoDeSalida
 
@@ -17,4 +17,7 @@ class Panel:
 
     def publicador(self, mqttPublish, topic, msg):
         mqttPublish.publish(self.topic + topic, msg, 0)
+
+    def mostrar_calculando(self, mqttPublish):
+        mqttPublish.publish(self.topic + "/llegada", "Calculando", 0)
 
